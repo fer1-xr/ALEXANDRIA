@@ -17,6 +17,7 @@ Fuente de verdad: [`src/server/db/schema.ts`](src/server/db/schema.ts) (Drizzle)
 | `0000_extensions_and_search_config.sql` | Extensiones `pg_trgm`, `unaccent`, `vector`; configuración `es_unaccent`; funciones inmutables `f_unaccent` y `f_array_text` |
 | `0001_core_schema.sql` | Enumeraciones, 25 tablas, índices y claves foráneas |
 | `0002_trigram_indexes.sql` | Índices GIN de trigramas sobre títulos y nombres |
+| `0003_function_search_path.sql` | `search_path` fijo en `f_unaccent` y `f_array_text` (recomendación del linter de Supabase) |
 
 ## Diagrama (relaciones principales)
 

@@ -20,6 +20,20 @@ tildes; trigramas; unicidad de correo; Argon2id; borrado en cascada; restriccion
 buscador, artículo, Sorpréndeme, línea de tiempo, AI, experiencias, 404, registro, biblioteca, control de acceso,
 login fallido, flujo editorial completo y móvil sin desbordes.
 
+## Despliegue
+
+| Elemento | Valor |
+|---|---|
+| Repositorio | `fer1-xr/alexandria`, rama `fase-1-fundamentos` (pendiente de fusionar en `main`) |
+| Vercel | proyecto `alexandria` (equipo `quadra13`), funciones en `gru1` (São Paulo), Node 22 |
+| Producción | https://alexandria-quadra13.vercel.app (vistas previas protegidas con Vercel Authentication) |
+| Base de datos | Supabase `alexandria` (`todwpvypjdvrlbzhsnkq`, sa-east-1, plan gratuito), rol `alexandria_app`, RLS activado en todas las tablas |
+| Variables | `DATABASE_URL` (sensitive), `DATABASE_PREPARE=false`, `DATABASE_POOL_MAX=3`, `APP_URL`; `SEED_ON_BUILD` solo en el primer despliegue |
+
+Pendiente tras el despliegue: crear la cuenta de administración (registrarse en la web y promoverla con
+`UPDATE users SET role = 'admin' WHERE lower(email) = '…';` desde el editor SQL de Supabase), configurar SMTP y
+fusionar la rama en `main` para que los siguientes `push` desplieguen automáticamente a producción.
+
 ## Hecho
 
 - [x] Inspección del entorno y documentación inicial (PROJECT_PLAN, ARCHITECTURE, DATABASE_SCHEMA, CONTENT_SOURCES, ROADMAP)
@@ -60,6 +74,8 @@ login fallido, flujo editorial completo y móvil sin desbordes.
 - El limitador de tasa es en memoria (válido para una instancia).
 - La CSP permite scripts en línea (necesario para Next.js sin nonces).
 - Las sesiones duran 30 días sin renovación deslizante.
+- Supabase: las extensiones `pg_trgm`, `unaccent` y `vector` están en el esquema `public` (aviso del linter). Moverlas a `extensions` exige actualizar `f_unaccent` y la configuración `es_unaccent`.
+- Vistas previas y producción comparten la misma base de datos (plan gratuito): las vistas previas no aplican migraciones.
 - Un `notFound()` dentro de contenido en streaming devuelve la página 404 con código HTTP 200 (comportamiento del
   streaming de Next.js; la página incluye `noindex`). Las rutas inexistentes fuera de rutas dinámicas sí devuelven 404.
 

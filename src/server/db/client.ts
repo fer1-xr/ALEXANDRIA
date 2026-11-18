@@ -8,13 +8,20 @@ if (!url) {
   throw new Error("DATABASE_URL no está definida. Copia .env.example a .env y configúrala.");
 }
 
+// Durante `next build` se prerenderizan decenas de páginas a la vez: con la base en otra región,
+// pocas conexiones encolan las consultas y superan el límite de tiempo de "use cache".
+const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+const poolMax = Number(
+  (isBuild ? process.env.DATABASE_POOL_MAX_BUILD : undefined) ?? process.env.DATABASE_POOL_MAX ?? 10,
+);
+
 // Reutiliza la conexión entre recargas en desarrollo para no agotar el pool.
 const globalForDb = globalThis as unknown as { __alexandriaSql?: ReturnType<typeof postgres> };
 const client =
   globalForDb.__alexandriaSql ??
   postgres(url, {
-    // En serverless (Vercel) conviene 1–3 conexiones por instancia.
-    max: Number(process.env.DATABASE_POOL_MAX ?? 10),
+    // En serverless (Vercel) conviene 1–3 conexiones por instancia en ejecución.
+    max: isBuild ? Math.max(poolMax, 10) : poolMax,
     idle_timeout: 20,
     connect_timeout: 15,
     // Los poolers en modo transacción (Supabase :6543, PgBouncer) no admiten sentencias preparadas.

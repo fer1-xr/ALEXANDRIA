@@ -72,6 +72,7 @@ Configura cualquier proveedor SMTP (Amazon SES, Postmark, Mailgun, Brevo…) con
 - **Conexión**: a través del pooler de Supabase en modo transacción (puerto 6543, IPv4), con
   `DATABASE_PREPARE=false` y `DATABASE_POOL_MAX` bajo (1–3).
 - **Build**: Vercel ejecuta `npm run vercel-build` = migraciones pendientes → (seed si `SEED_ON_BUILD=1`) → `next build`.
+  Las vistas previas no migran (comparten la base de producción) salvo `MIGRATE_ON_PREVIEW=1`.
   **Usa `SEED_ON_BUILD=1` solo en el primer despliegue**: el seed restaura los artículos de demostración a su versión
   original y pisaría las ediciones hechas desde el CMS.
 - **Variables**: `DATABASE_URL`, `DATABASE_PREPARE`, `DATABASE_POOL_MAX`, `APP_URL` y, opcionalmente, las de SMTP.
