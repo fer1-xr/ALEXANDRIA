@@ -28,7 +28,7 @@ login fallido, flujo editorial completo y móvil sin desbordes.
 | Vercel | proyecto `alexandria` (equipo `quadra13`), funciones en `gru1` (São Paulo), Node 22 |
 | Producción | https://alexandria-quadra13.vercel.app (vistas previas protegidas con Vercel Authentication) |
 | Base de datos | Supabase `alexandria` (`todwpvypjdvrlbzhsnkq`, sa-east-1, plan gratuito), rol `alexandria_app`, RLS activado en todas las tablas |
-| Variables | `DATABASE_URL` (sensitive), `DATABASE_PREPARE=false`, `DATABASE_POOL_MAX=3`, `APP_URL`; `SEED_ON_BUILD` solo en el primer despliegue |
+| Variables | `DATABASE_URL` (sensitive, pooler en modo sesión :5432), `DATABASE_PREPARE=true`, `DATABASE_POOL_MAX=3`, `DATABASE_POOL_MAX_BUILD=8`, `APP_URL`; `SEED_ON_BUILD` solo en el primer despliegue |
 
 Pendiente tras el despliegue: crear la cuenta de administración (registrarse en la web y promoverla con
 `UPDATE users SET role = 'admin' WHERE lower(email) = '…';` desde el editor SQL de Supabase), configurar SMTP y

@@ -69,8 +69,11 @@ Configura cualquier proveedor SMTP (Amazon SES, Postmark, Mailgun, Brevo…) con
 - **Base de datos**: proyecto Supabase con las extensiones `pg_trgm`, `unaccent` y `vector` creadas por el
   administrador, y un rol propio `alexandria_app` dueño de las tablas. Todas las tablas tienen RLS activado sin
   políticas, de modo que la API de datos pública de Supabase no expone nada; la app, como dueña, no se ve afectada.
-- **Conexión**: a través del pooler de Supabase en modo transacción (puerto 6543, IPv4), con
-  `DATABASE_PREPARE=false` y `DATABASE_POOL_MAX` bajo (1–3).
+- **Conexión**: a través del pooler de Supabase en **modo sesión** (puerto 5432 del host `aws-1-…pooler.supabase.com`,
+  IPv4) con `DATABASE_POOL_MAX=3` en ejecución. El modo transacción (6543) se descartó: durante el prerender, con
+  varias consultas en paralelo por conexión, algunas quedaban sin respuesta y la compilación agotaba el tiempo.
+  El modo sesión limita el total de conexiones al tamaño del pool de Supabase (15 en el plan gratuito): vigilarlo si
+  crece el tráfico.
 - **Build**: Vercel ejecuta `npm run vercel-build` = migraciones pendientes → (seed si `SEED_ON_BUILD=1`) → `next build`.
   Las vistas previas no migran (comparten la base de producción) salvo `MIGRATE_ON_PREVIEW=1`.
   **Usa `SEED_ON_BUILD=1` solo en el primer despliegue**: el seed restaura los artículos de demostración a su versión
