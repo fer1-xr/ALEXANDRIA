@@ -64,6 +64,18 @@ Configura cualquier proveedor SMTP (Amazon SES, Postmark, Mailgun, Brevo…) con
 > **Compilación:** con Cache Components, `next build` prerenderiza el contenido público y **necesita acceso a la base de
 > datos**. Ejecuta las migraciones y el seed antes de compilar.
 
+## Despliegue (Vercel + Supabase)
+
+- **Base de datos**: proyecto Supabase con las extensiones `pg_trgm`, `unaccent` y `vector` creadas por el
+  administrador, y un rol propio `alexandria_app` dueño de las tablas. Todas las tablas tienen RLS activado sin
+  políticas, de modo que la API de datos pública de Supabase no expone nada; la app, como dueña, no se ve afectada.
+- **Conexión**: a través del pooler de Supabase en modo transacción (puerto 6543, IPv4), con
+  `DATABASE_PREPARE=false` y `DATABASE_POOL_MAX` bajo (1–3).
+- **Build**: Vercel ejecuta `npm run vercel-build` = migraciones pendientes → (seed si `SEED_ON_BUILD=1`) → `next build`.
+  **Usa `SEED_ON_BUILD=1` solo en el primer despliegue**: el seed restaura los artículos de demostración a su versión
+  original y pisaría las ediciones hechas desde el CMS.
+- **Variables**: `DATABASE_URL`, `DATABASE_PREPARE`, `DATABASE_POOL_MAX`, `APP_URL` y, opcionalmente, las de SMTP.
+
 ## Estructura
 
 ```

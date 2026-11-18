@@ -254,17 +254,25 @@ export async function seed(db: Db) {
   return { categories: catIds.size, sources: srcIds.size, articles: artIds.size, events: EVENTS.length };
 }
 
+/** Ejecuta el seed completo en una transacción contra la base indicada. */
+export async function runSeed(url: string) {
+  const client = postgres(url, { max: 1, onnotice: () => {}, prepare: process.env.DATABASE_PREPARE !== "false" });
+  try {
+    const db = drizzle(client, { schema, casing: "snake_case" });
+    return await db.transaction((tx) => seed(tx as unknown as Db));
+  } finally {
+    await client.end();
+  }
+}
+
 if (process.argv[1]?.endsWith("index.ts")) {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL no definida");
-  const client = postgres(url, { max: 1, onnotice: () => {} });
-  const db = drizzle(client, { schema, casing: "snake_case" });
-  db.transaction((tx) => seed(tx as unknown as Db))
+  runSeed(url)
     .then((r) => console.log(`✓ Seed: ${r.categories} categorías, ${r.sources} fuentes, ${r.articles} artículos, ${r.events} acontecimientos`))
     .catch((err) => {
       console.error("✗ Error en el seed:", err);
       process.exitCode = 1;
-    })
-    .finally(() => client.end());
+    });
 }
 

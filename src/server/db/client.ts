@@ -13,9 +13,12 @@ const globalForDb = globalThis as unknown as { __alexandriaSql?: ReturnType<type
 const client =
   globalForDb.__alexandriaSql ??
   postgres(url, {
+    // En serverless (Vercel) conviene 1–3 conexiones por instancia.
     max: Number(process.env.DATABASE_POOL_MAX ?? 10),
-    idle_timeout: 30,
-    prepare: true,
+    idle_timeout: 20,
+    connect_timeout: 15,
+    // Los poolers en modo transacción (Supabase :6543, PgBouncer) no admiten sentencias preparadas.
+    prepare: process.env.DATABASE_PREPARE !== "false",
   });
 if (process.env.NODE_ENV !== "production") globalForDb.__alexandriaSql = client;
 
