@@ -1,0 +1,47 @@
+# NOTA: escrita pero aún no ejecutada (el proyecto no estaba en un repositorio remoto).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: alexandria
+          POSTGRES_PASSWORD: alexandria_ci
+          POSTGRES_DB: alexandria
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U alexandria" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://alexandria:alexandria_ci@localhost:5432/alexandria
+      TEST_DATABASE_URL: postgres://alexandria:alexandria_ci@localhost:5432/alexandria_test
+      APP_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Crear base de pruebas
+        run: PGPASSWORD=alexandria_ci psql -h localhost -U alexandria -d alexandria -c "CREATE DATABASE alexandria_test"
+      - name: Extensiones
+        run: |
+          for db in alexandria alexandria_test; do
+            PGPASSWORD=alexandria_ci psql -h localhost -U alexandria -d $db -c "CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS unaccent; CREATE EXTENSION IF NOT EXISTS vector;"
+          done
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run db:migrate && npm run db:seed
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

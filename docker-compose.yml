@@ -1,0 +1,40 @@
+# NOTA: no verificado en el entorno de desarrollo original (sin demonio Docker).
+services:
+  db:
+    image: pgvector/pgvector:pg16   # incluye pgvector; pg_trgm y unaccent vienen con PostgreSQL
+    environment:
+      POSTGRES_USER: alexandria
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambia-esta-contraseña}
+      POSTGRES_DB: alexandria
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alexandria"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      network: host            # el build necesita la base (prerender) publicada en localhost:5432
+      args:
+        DATABASE_URL: postgres://alexandria:${POSTGRES_PASSWORD:-cambia-esta-contraseña}@localhost:5432/alexandria
+        APP_URL: ${APP_URL:-http://localhost:3000}
+    environment:
+      DATABASE_URL: postgres://alexandria:${POSTGRES_PASSWORD:-cambia-esta-contraseña}@db:5432/alexandria
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
